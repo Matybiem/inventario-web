@@ -31,42 +31,22 @@ export default function StockGeneral() {
     requestAnimationFrame(animate);
   }, [stats.avgPct]);
 
-  // Gauge geometry — semicircle from 135° to 405°
-  const radius = 78;
-  const strokeWidth = 14;
-  const cx = 140;
-  const cy = 110;
-  const startAngle = 135;
-  const endAngle = 405;
-  const totalAngle = endAngle - startAngle; // 270°
+  const radius = 85;
+  const strokeWidth = 28;
+  const centerX = 150;
+  const centerY = 150;
+  const semicircumference = Math.PI * radius;
+  const grayLength = semicircumference;
 
-  const polarToCartesian = (angle: number) => {
-    const rad = ((angle - 90) * Math.PI) / 180;
-    return { x: cx + radius * Math.cos(rad), y: cy + radius * Math.sin(rad) };
-  };
+  const redLength = Math.max(0, Math.min(thresholds.criticalMax, 100) / 100) * semicircumference;
+  const yellowLength = Math.max(
+    0,
+    Math.min(Math.max(thresholds.lowMax - thresholds.criticalMax, 0), 100) / 100,
+  ) * semicircumference;
+  const greenLength = Math.max(0, (100 - Math.min(thresholds.lowMax, 100)) / 100) * semicircumference;
 
-  const describeArc = (start: number, end: number) => {
-    const s = polarToCartesian(start);
-    const e = polarToCartesian(end);
-    const largeArc = end - start > 180 ? 1 : 0;
-    return `M ${s.x} ${s.y} A ${radius} ${radius} 0 ${largeArc} 1 ${e.x} ${e.y}`;
-  };
-
-  const criticalEnd = startAngle + (thresholds.criticalMax / 100) * totalAngle;
-  const lowEnd = startAngle + (thresholds.lowMax / 100) * totalAngle;
-
-  const needleAngle = startAngle + (animatedPct / 100) * totalAngle;
-  const needlePos = polarToCartesian(needleAngle);
-
-  // Inner point for needle (shorter, starts from center)
-  const innerRadius = 18;
-  const innerPos = {
-    x: cx + innerRadius * Math.cos(((needleAngle - 90) * Math.PI) / 180),
-    y: cy + innerRadius * Math.sin(((needleAngle - 90) * Math.PI) / 180),
-  };
-
-  // Ticks every 10%
-  const ticks = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
+  const yellowOffset = -redLength;
+  const greenOffset = -(redLength + yellowLength);
 
   const handleSave = () => {
     updateThresholds({
@@ -90,83 +70,120 @@ export default function StockGeneral() {
 
       {/* Gauge */}
       <div className="flex justify-center">
-        <svg width="280" height="145" viewBox="0 0 280 145">
-          {/* Background arc track */}
-          <path
-            d={describeArc(startAngle, endAngle)}
-            fill="none"
-            stroke="#E8E8E8"
-            strokeWidth={strokeWidth}
-            strokeLinecap="butt"
-          />
+        <div className="relative w-[300px] h-[180px]">
+          <svg viewBox="0 0 300 170" className="w-full h-full overflow-visible">
+            <defs>
+              <filter id="glow" x="-10%" y="-10%" width="120%" height="120%">
+                <feGaussianBlur stdDeviation="2" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
 
-          {/* Colored zones */}
-          <path
-            d={describeArc(startAngle, criticalEnd)}
-            fill="none"
-            stroke="#EF4444"
-            strokeWidth={strokeWidth}
-            strokeLinecap="butt"
-          />
-          <path
-            d={describeArc(criticalEnd, lowEnd)}
-            fill="none"
-            stroke="#EAB308"
-            strokeWidth={strokeWidth}
-            strokeLinecap="butt"
-          />
-          <path
-            d={describeArc(lowEnd, endAngle)}
-            fill="none"
-            stroke="#22C55E"
-            strokeWidth={strokeWidth}
-            strokeLinecap="butt"
-          />
+            <circle
+              cx={centerX}
+              cy={centerY}
+              r={radius}
+              fill="none"
+              stroke="#E5E7EB"
+              strokeWidth={strokeWidth}
+              strokeLinecap="round"
+              strokeDasharray={`${grayLength} ${semicircumference * 2}`}
+              strokeDashoffset={0}
+              transform={`rotate(180 ${centerX} ${centerY})`}
+              style={{ transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)' }}
+            />
 
-          {/* Tick marks */}
-          {ticks.map(t => {
-            const a = startAngle + (t / 100) * totalAngle;
-            const outer = polarToCartesian(a);
-            const inner = {
-              x: cx + (radius - strokeWidth / 2 - 3) * Math.cos(((a - 90) * Math.PI) / 180),
-              y: cy + (radius - strokeWidth / 2 - 3) * Math.sin(((a - 90) * Math.PI) / 180),
-            };
-            return (
-              <line
-                key={t}
-                x1={inner.x}
-                y1={inner.y}
-                x2={outer.x}
-                y2={outer.y}
-                stroke="#fff"
-                strokeWidth="1.5"
+            {redLength > 0 && (
+              <circle
+                cx={centerX}
+                cy={centerY}
+                r={radius}
+                fill="none"
+                stroke="#EF4444"
+                strokeWidth={strokeWidth}
+                strokeLinecap="round"
+                strokeDasharray={`${redLength} ${semicircumference * 2}`}
+                strokeDashoffset={0}
+                transform={`rotate(180 ${centerX} ${centerY})`}
+                style={{
+                  transition: 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
+                  filter: 'drop-shadow(0 2px 4px rgba(239, 68, 68, 0.25))',
+                }}
               />
-            );
-          })}
+            )}
 
-          {/* Scale labels 0 and 100 */}
-          <text x="52" y="132" textAnchor="middle" fill="#999" fontSize="11" fontWeight="500">0</text>
-          <text x="228" y="132" textAnchor="middle" fill="#999" fontSize="11" fontWeight="500">100</text>
+            {yellowLength > 0 && (
+              <circle
+                cx={centerX}
+                cy={centerY}
+                r={radius}
+                fill="none"
+                stroke="#EAB308"
+                strokeWidth={strokeWidth}
+                strokeLinecap="round"
+                strokeDasharray={`${yellowLength} ${semicircumference * 2}`}
+                strokeDashoffset={yellowOffset}
+                transform={`rotate(180 ${centerX} ${centerY})`}
+                style={{
+                  transition: 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
+                  filter: 'drop-shadow(0 2px 4px rgba(234, 179, 8, 0.25))',
+                }}
+              />
+            )}
 
-          {/* Center value */}
-          <text x={cx} y={cy + 12} textAnchor="middle" fill="#1A1A1A" fontSize="32" fontWeight="700">
-            {animatedPct}%
-          </text>
+            {greenLength > 0 && (
+              <circle
+                cx={centerX}
+                cy={centerY}
+                r={radius}
+                fill="none"
+                stroke="#22C55E"
+                strokeWidth={strokeWidth}
+                strokeLinecap="round"
+                strokeDasharray={`${greenLength} ${semicircumference * 2}`}
+                strokeDashoffset={greenOffset}
+                transform={`rotate(180 ${centerX} ${centerY})`}
+                style={{
+                  transition: 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
+                  filter: 'drop-shadow(0 2px 4px rgba(34, 197, 94, 0.25))',
+                }}
+              />
+            )}
 
-          {/* Needle */}
-          <line
-            x1={innerPos.x}
-            y1={innerPos.y}
-            x2={needlePos.x}
-            y2={needlePos.y}
-            stroke="#1A1A1A"
-            strokeWidth="2.8"
-            strokeLinecap="round"
-          />
-          {/* Needle pivot */}
-          <circle cx={cx} cy={cy} r="5.5" fill="#1A1A1A" />
-          <circle cx={cx} cy={cy} r="2.5" fill="#fff" />
-        </svg>
+            <text
+              x={centerX}
+              y={centerY - 10}
+              textAnchor="middle"
+              className="text-4xl font-bold fill-gray-800"
+              style={{ fontSize: '42px', fontWeight: 700 }}
+            >
+              {animatedPct}%
+            </text>
+
+            <text
+              x={centerX - radius - 5}
+              y={centerY + 8}
+              textAnchor="end"
+              className="text-xs fill-gray-400"
+              style={{ fontSize: '11px' }}
+            >
+              0
+            </text>
+
+            <text
+              x={centerX + radius + 5}
+              y={centerY + 8}
+              textAnchor="start"
+              className="text-xs fill-gray-400"
+              style={{ fontSize: '11px' }}
+            >
+              100
+            </text>
+          </svg>
+        </div>
       </div>
 
       {/* Legend */}
