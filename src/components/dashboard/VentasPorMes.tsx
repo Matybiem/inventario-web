@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { getMonthlySales } from '@/data/store';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { formatCurrency } from '@/lib/utils';
+import './VentasPorMes.css';
 
 export default function VentasPorMes() {
   const data = useMemo(() => getMonthlySales(), []);
@@ -12,9 +13,9 @@ export default function VentasPorMes() {
   const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number }>; label?: string }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white px-3 py-2 rounded-lg shadow-lg border border-[#E5E5E5]">
-          <p className="text-[12px] font-medium text-[#1A1A1A]">{label}</p>
-          <p className="text-[13px] text-[#666]">{formatCurrency(payload[0].value)}</p>
+        <div className="ventas-por-mes-tooltip">
+          <p className="ventas-por-mes-tooltip-label">{label}</p>
+          <p className="ventas-por-mes-tooltip-value">{formatCurrency(payload[0].value)}</p>
         </div>
       );
     }
@@ -22,10 +23,10 @@ export default function VentasPorMes() {
   };
 
   return (
-    <div className="bg-white rounded-xl p-6 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
-      <h3 className="text-[18px] font-semibold text-[#1A1A1A] mb-4">Ventas/Mes</h3>
+    <div className="ventas-por-mes-container">
+      <h3 className="ventas-por-mes-title">Ventas/Mes</h3>
 
-      <div className="h-[220px]">
+      <div className="ventas-por-mes-chart-container">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
             <XAxis

@@ -1,0 +1,114 @@
+/* ProductosMasVendidos.css */
+
+.productos-mas-vendidos-container {
+  background-color: white;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.productos-mas-vendidos-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1A1A1A;
+  margin-bottom: 0.25rem;
+}
+
+.productos-mas-vendidos-subtitle {
+  font-size: 0.75rem;
+  color: #999;
+  margin-bottom: 1rem;
+}
+
+.productos-mas-vendidos-table {
+  width: 100%;
+}
+
+.productos-mas-vendidos-thead {
+  border-bottom: 1px solid #E5E5E5;
+}
+
+.productos-mas-vendidos-th {
+  text-align: left;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: #666;
+  font-weight: 500;
+  padding-bottom: 0.5rem;
+}
+
+.productos-mas-vendidos-th-center {
+  text-align: center;
+}
+
+.productos-mas-vendidos-th-right {
+  text-align: right;
+}
+
+.productos-mas-vendidos-th-sortable {
+  cursor: pointer;
+}
+
+.productos-mas-vendidos-th-sortable:hover {
+  color: #1A1A1A;
+}
+
+.productos-mas-vendidos-tbody {
+}
+
+.productos-mas-vendidos-tr {
+  border-bottom: 1px solid #E5E5E5;
+  animation: fadeInUp 0.5s ease-out forwards;
+  opacity: 0;
+}
+
+.productos-mas-vendidos-tr:last-child {
+  border-bottom: 0;
+}
+
+.productos-mas-vendidos-td {
+  padding: 0.625rem 0;
+  font-size: 0.875rem;
+  color: #1A1A1A;
+}
+
+.productos-mas-vendidos-td-center {
+  text-align: center;
+}
+
+.productos-mas-vendidos-td-right {
+  text-align: right;
+  font-weight: 500;
+}
+
+.productos-mas-vendidos-trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.productos-mas-vendidos-trend-up {
+  color: #22C55E;
+}
+
+.productos-mas-vendidos-trend-down {
+  color: #EF4444;
+}
+
+.productos-mas-vendidos-empty {
+  padding: 1.5rem 0;
+  text-align: center;
+  font-size: 0.8125rem;
+  color: #999;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

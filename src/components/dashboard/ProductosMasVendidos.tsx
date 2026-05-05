@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { getTopSoldProducts } from '@/data/store';
 import { formatCurrency } from '@/lib/utils';
 import { TrendingUp, TrendingDown } from 'lucide-react';
+import './ProductosMasVendidos.css';
 
 type SortField = 'quantity' | 'amount';
 type SortDir = 'asc' | 'desc';
@@ -34,52 +35,52 @@ export default function ProductosMasVendidos() {
   };
 
   return (
-    <div className="bg-white rounded-xl p-6 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
-      <h3 className="text-[18px] font-semibold text-[#1A1A1A] mb-1">Productos más vendidos</h3>
-      <p className="text-[12px] text-[#999] mb-4">Mes actual</p>
+    <div className="productos-mas-vendidos-container">
+      <h3 className="productos-mas-vendidos-title">Productos más vendidos</h3>
+      <p className="productos-mas-vendidos-subtitle">Mes actual</p>
 
-      <table className="w-full">
-        <thead>
-          <tr className="border-b border-[#E5E5E5]">
-            <th className="text-left text-[12px] uppercase text-[#666] font-medium pb-2">Producto</th>
+      <table className="productos-mas-vendidos-table">
+        <thead className="productos-mas-vendidos-thead">
+          <tr>
+            <th className="productos-mas-vendidos-th">Producto</th>
             <th
-              className="text-center text-[12px] uppercase text-[#666] font-medium pb-2 cursor-pointer hover:text-[#1A1A1A]"
+              className="productos-mas-vendidos-th productos-mas-vendidos-th-center productos-mas-vendidos-th-sortable"
               onClick={() => toggleSort('quantity')}
             >
               Ventas {sortIcon('quantity')}
             </th>
             <th
-              className="text-right text-[12px] uppercase text-[#666] font-medium pb-2 cursor-pointer hover:text-[#1A1A1A]"
+              className="productos-mas-vendidos-th productos-mas-vendidos-th-right productos-mas-vendidos-th-sortable"
               onClick={() => toggleSort('amount')}
             >
               Monto {sortIcon('amount')}
             </th>
           </tr>
         </thead>
-        <tbody>
+        <tbody className="productos-mas-vendidos-tbody">
           {topProducts.map((item, i) => (
             <tr
               key={item.product.id}
-              className="border-b border-[#E5E5E5] last:border-0"
+              className="productos-mas-vendidos-tr"
               style={{ animationDelay: `${i * 30}ms` }}
             >
-              <td className="py-2.5 text-[14px] text-[#1A1A1A]">{item.product.name}</td>
-              <td className="py-2.5 text-[14px] text-center">
-                <span className="inline-flex items-center gap-1">
+              <td className="productos-mas-vendidos-td">{item.product.name}</td>
+              <td className="productos-mas-vendidos-td productos-mas-vendidos-td-center">
+                <span className="productos-mas-vendidos-trend">
                   {item.quantity}
                   {item.trend === 'up' ? (
-                    <TrendingUp size={14} className="text-[#22C55E]" />
+                    <TrendingUp size={14} className="productos-mas-vendidos-trend-up" />
                   ) : (
-                    <TrendingDown size={14} className="text-[#EF4444]" />
+                    <TrendingDown size={14} className="productos-mas-vendidos-trend-down" />
                   )}
                 </span>
               </td>
-              <td className="py-2.5 text-[14px] text-right font-medium">{formatCurrency(item.amount)}</td>
+              <td className="productos-mas-vendidos-td productos-mas-vendidos-td-right">{formatCurrency(item.amount)}</td>
             </tr>
           ))}
           {topProducts.length === 0 && (
             <tr>
-              <td colSpan={3} className="py-6 text-center text-[13px] text-[#999]">
+              <td colSpan={3} className="productos-mas-vendidos-empty">
                 No hay ventas este mes
               </td>
             </tr>

@@ -4,6 +4,7 @@ import { getStockStats } from '@/data/store';
 import { Settings } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import './StockGeneral.css';
 
 export default function StockGeneral() {
   const { getThresholds, updateThresholds } = useApp();
@@ -58,20 +59,20 @@ export default function StockGeneral() {
   };
 
   return (
-    <div className="bg-white rounded-xl p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)] relative">
+    <div className="stock-general-container">
       <button
         onClick={() => { setLocalThresholds(thresholds); setShowConfig(true); }}
-        className="absolute top-4 right-4 p-1.5 rounded-lg hover:bg-[#F5F5F5] text-[#999] hover:text-[#1A1A1A] transition-colors"
+        className="stock-general-settings-btn"
       >
         <Settings size={16} />
       </button>
 
-      <h3 className="text-[16px] font-semibold text-[#1A1A1A] mb-1">Stock general</h3>
+      <h3 className="stock-general-title">Stock general</h3>
 
       {/* Gauge */}
-      <div className="flex justify-center">
-        <div className="relative w-[300px] h-[180px]">
-          <svg viewBox="0 0 300 170" className="w-full h-full overflow-visible">
+      <div className="stock-general-gauge-container">
+        <div className="stock-general-gauge-wrapper">
+          <svg viewBox="0 0 300 170" className="stock-general-svg">
             <defs>
               <filter id="glow" x="-10%" y="-10%" width="120%" height="120%">
                 <feGaussianBlur stdDeviation="2" result="blur" />
@@ -93,7 +94,7 @@ export default function StockGeneral() {
               strokeDasharray={`${grayLength} ${semicircumference * 2}`}
               strokeDashoffset={0}
               transform={`rotate(180 ${centerX} ${centerY})`}
-              style={{ transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)' }}
+              className="stock-general-gauge-bg"
             />
 
             {redLength > 0 && (
@@ -108,10 +109,7 @@ export default function StockGeneral() {
                 strokeDasharray={`${redLength} ${semicircumference * 2}`}
                 strokeDashoffset={0}
                 transform={`rotate(180 ${centerX} ${centerY})`}
-                style={{
-                  transition: 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
-                  filter: 'drop-shadow(0 2px 4px rgba(239, 68, 68, 0.25))',
-                }}
+                className="stock-general-gauge-red"
               />
             )}
 
@@ -127,10 +125,7 @@ export default function StockGeneral() {
                 strokeDasharray={`${yellowLength} ${semicircumference * 2}`}
                 strokeDashoffset={yellowOffset}
                 transform={`rotate(180 ${centerX} ${centerY})`}
-                style={{
-                  transition: 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
-                  filter: 'drop-shadow(0 2px 4px rgba(234, 179, 8, 0.25))',
-                }}
+                className="stock-general-gauge-yellow"
               />
             )}
 
@@ -146,10 +141,7 @@ export default function StockGeneral() {
                 strokeDasharray={`${greenLength} ${semicircumference * 2}`}
                 strokeDashoffset={greenOffset}
                 transform={`rotate(180 ${centerX} ${centerY})`}
-                style={{
-                  transition: 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
-                  filter: 'drop-shadow(0 2px 4px rgba(34, 197, 94, 0.25))',
-                }}
+                className="stock-general-gauge-green"
               />
             )}
 
@@ -157,28 +149,25 @@ export default function StockGeneral() {
               x={centerX}
               y={centerY - 10}
               textAnchor="middle"
-              className="text-4xl font-bold fill-gray-800"
-              style={{ fontSize: '42px', fontWeight: 700 }}
+              className="stock-general-percentage-text"
             >
               {animatedPct}%
             </text>
 
             <text
-              x={centerX - radius - 5}
+              x={centerX - radius - 20}
               y={centerY + 8}
               textAnchor="end"
-              className="text-xs fill-gray-400"
-              style={{ fontSize: '11px' }}
+              className="stock-general-label-0"
             >
               0
             </text>
 
             <text
-              x={centerX + radius + 5}
+              x={centerX + radius + 20}
               y={centerY + 8}
               textAnchor="start"
-              className="text-xs fill-gray-400"
-              style={{ fontSize: '11px' }}
+              className="stock-general-label-100"
             >
               100
             </text>
@@ -187,18 +176,18 @@ export default function StockGeneral() {
       </div>
 
       {/* Legend */}
-      <div className="mt-2 space-y-1">
-        <div className="flex items-center gap-2 text-[11px]">
-          <span className="w-2 h-2 rounded-full bg-[#22C55E] shrink-0"></span>
-          <span className="text-[#666]">Normal [{thresholds.normalMin}%-{thresholds.normalMax}%]: {stats.normalCount} Productos</span>
+      <div className="stock-general-legend">
+        <div className="stock-general-legend-item">
+          <span className="stock-general-legend-dot stock-general-legend-dot-green"></span>
+          <span className="stock-general-legend-text">Normal [{thresholds.normalMin}%-{thresholds.normalMax}%]: {stats.normalCount} Productos</span>
         </div>
-        <div className="flex items-center gap-2 text-[11px]">
-          <span className="w-2 h-2 rounded-full bg-[#EAB308] shrink-0"></span>
-          <span className="text-[#666]">Bajo [{thresholds.lowMin}%-{thresholds.lowMax}%]: {stats.lowCount} Productos</span>
+        <div className="stock-general-legend-item">
+          <span className="stock-general-legend-dot stock-general-legend-dot-yellow"></span>
+          <span className="stock-general-legend-text">Bajo [{thresholds.lowMin}%-{thresholds.lowMax}%]: {stats.lowCount} Productos</span>
         </div>
-        <div className="flex items-center gap-2 text-[11px]">
-          <span className="w-2 h-2 rounded-full bg-[#EF4444] shrink-0"></span>
-          <span className="text-[#666]">Crítico [{thresholds.criticalMin}%-{thresholds.criticalMax}%]: {stats.criticalCount} Productos</span>
+        <div className="stock-general-legend-item">
+          <span className="stock-general-legend-dot stock-general-legend-dot-red"></span>
+          <span className="stock-general-legend-text">Crítico [{thresholds.criticalMin}%-{thresholds.criticalMax}%]: {stats.criticalCount} Productos</span>
         </div>
       </div>
 
@@ -209,17 +198,9 @@ export default function StockGeneral() {
             <DialogTitle className="text-[16px] font-semibold">Configurar Umbrales</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-2">
+            
             <div>
-              <label className="text-[12px] uppercase text-[#999] font-medium">Máximo Crítico (%)</label>
-              <input
-                type="number"
-                value={localThresholds.criticalMax}
-                onChange={e => setLocalThresholds(prev => ({ ...prev, criticalMax: Number(e.target.value) }))}
-                className="w-full h-10 mt-1 px-3 border border-[#D0D0D0] rounded-lg text-[14px] focus:border-[#1A1A1A] focus:outline-none"
-              />
-            </div>
-            <div>
-              <label className="text-[12px] uppercase text-[#999] font-medium">Máximo Bajo (%)</label>
+              <label className="text-[12px] uppercase text-[#999] font-medium">Porcentaje Bajo (%)</label>
               <input
                 type="number"
                 value={localThresholds.lowMax}
@@ -227,6 +208,17 @@ export default function StockGeneral() {
                 className="w-full h-10 mt-1 px-3 border border-[#D0D0D0] rounded-lg text-[14px] focus:border-[#1A1A1A] focus:outline-none"
               />
             </div>
+
+            <div>
+              <label className="text-[12px] uppercase text-[#999] font-medium">Porcentaje Crítico (%)</label>
+              <input
+                type="number"
+                value={localThresholds.criticalMax}
+                onChange={e => setLocalThresholds(prev => ({ ...prev, criticalMax: Number(e.target.value) }))}
+                className="w-full h-10 mt-1 px-3 border border-[#D0D0D0] rounded-lg text-[14px] focus:border-[#1A1A1A] focus:outline-none"
+              />
+            </div>
+
             <Button
               onClick={handleSave}
               className="w-full bg-[#1A1A1A] hover:bg-[#333] text-white h-10 text-[14px] font-medium"

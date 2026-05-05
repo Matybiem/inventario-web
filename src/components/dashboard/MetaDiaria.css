@@ -1,0 +1,129 @@
+/* MetaDiaria.css */
+
+.meta-diaria-container {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  position: relative;
+  background-color: white;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.meta-diaria-settings-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  color: #9ca3af;
+  transition: all 0.2s;
+}
+
+.meta-diaria-settings-btn:hover {
+  color: #374151;
+  background-color: #f3f4f6;
+}
+
+.meta-diaria-title {
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 1.5rem;
+}
+
+.meta-diaria-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.meta-diaria-content-row {
+  display: flex;
+  flex-direction: row;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.meta-diaria-gauge-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.meta-diaria-gauge-wrapper {
+  position: relative;
+  width: 300px;
+  height: 180px;
+}
+
+.meta-diaria-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.meta-diaria-gauge-bg {
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.meta-diaria-gauge-blue {
+  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  filter: drop-shadow(0 2px 4px rgba(74, 126, 187, 0.3));
+}
+
+.meta-diaria-gauge-green {
+  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  filter: drop-shadow(0 2px 4px rgba(34, 197, 94, 0.3));
+}
+
+.meta-diaria-percentage-text {
+  font-size: 42px;
+  font-weight: 700;
+  fill: #1f2937;
+}
+
+.meta-diaria-label-0 {
+  font-size: 11px;
+  fill: #000000;
+}
+
+.meta-diaria-label-100 {
+  font-size: 11px;
+  fill: #000000;
+}
+
+.meta-diaria-info-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.meta-diaria-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.meta-diaria-info-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: #9ca3af;
+  margin-bottom: 0.25rem;
+}
+
+.meta-diaria-info-value {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.meta-diaria-info-subtext {
+  font-size: 0.875rem;
+  color: #6b7280;
+}

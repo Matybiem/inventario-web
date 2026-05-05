@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getCriticalStockProducts, getThresholds } from '@/data/store';
 import type { Product } from '@/types';
+import './StockCritico.css';
 
 export default function StockCritico() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -20,38 +21,38 @@ export default function StockCritico() {
   const getStockColor = (stock: number) => {
     const maxStock = Math.max(...products.map(p => p.stock), 1);
     const pct = (stock / maxStock) * 100;
-    if (pct <= thresholds.criticalMax) return 'text-[#EF4444]';
-    if (pct <= thresholds.lowMax) return 'text-[#EAB308]';
-    return 'text-[#22C55E]';
+    if (pct <= thresholds.criticalMax) return 'stock-critico-stock-critical';
+    if (pct <= thresholds.lowMax) return 'stock-critico-stock-low';
+    return 'stock-critico-stock-normal';
   };
 
   return (
-    <div className="bg-white rounded-xl p-6 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
-      <h3 className="text-[18px] font-semibold text-[#1A1A1A] mb-4">Stock crítico</h3>
+    <div className="stock-critico-container">
+      <h3 className="stock-critico-title">Stock crítico</h3>
 
-      <table className="w-full">
-        <thead>
-          <tr className="border-b border-[#E5E5E5]">
-            <th className="text-left text-[12px] uppercase text-[#666] font-medium pb-2">Propietario</th>
-            <th className="text-right text-[12px] uppercase text-[#666] font-medium pb-2">Unidades</th>
+      <table className="stock-critico-table">
+        <thead className="stock-critico-thead">
+          <tr>
+            <th className="stock-critico-th">Propietario</th>
+            <th className="stock-critico-th stock-critico-th-right">Unidades</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody className="stock-critico-tbody">
           {products.map((product, i) => (
             <tr
               key={product.id}
-              className="border-b border-[#E5E5E5] last:border-0 animate-in fade-in slide-in-from-bottom-2"
+              className="stock-critico-tr"
               style={{ animationDelay: `${i * 30}ms`, animationFillMode: 'both' }}
             >
-              <td className="py-3 text-[14px] text-[#1A1A1A]">{product.name}</td>
-              <td className={`py-3 text-[14px] font-bold text-right ${getStockColor(product.stock)}`}>
+              <td className="stock-critico-td">{product.name}</td>
+              <td className={`stock-critico-td stock-critico-td-right ${getStockColor(product.stock)}`}>
                 {product.stock}
               </td>
             </tr>
           ))}
           {products.length === 0 && (
             <tr>
-              <td colSpan={2} className="py-6 text-center text-[13px] text-[#999]">
+              <td colSpan={2} className="stock-critico-empty">
                 No hay productos con stock bajo
               </td>
             </tr>
@@ -59,7 +60,7 @@ export default function StockCritico() {
         </tbody>
       </table>
 
-      <p className="text-[11px] text-[#999] mt-3">Actualizado en tiempo real</p>
+      <p className="stock-critico-footer">Actualizado en tiempo real</p>
     </div>
   );
 }

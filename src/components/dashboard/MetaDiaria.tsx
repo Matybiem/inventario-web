@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import './MetaDiaria.css';
 
 export default function MetaDiaria() {
   const { getDailyGoal, updateDailyGoal } = useApp();
@@ -79,28 +80,27 @@ export default function MetaDiaria() {
   };
 
   return (
-    <div className="w-full max-w-[720px] mx-auto select-none">
-      {/* Card principal */}
-      <div className="relative bg-white rounded-2xl border-2 border-[#7DB8DA] p-6 shadow-sm">
-        {/* Botón de editar meta */}
-        <button
-          onClick={openMetaDialog}
-          className="absolute top-4 right-4 p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#7DB8DA] focus:ring-offset-1"
-          title="Editar meta"
-        >
-          <Settings className="w-5 h-5" />
-        </button>
+    <div className="meta-diaria-container">
+      {/* Botón de editar meta */}
+      <button
+        onClick={openMetaDialog}
+        className="meta-diaria-settings-btn"
+        title="Editar meta"
+      >
+        <Settings className="w-5 h-5" />
+      </button>
 
-        {/* Título */}
-        <h2 className="text-lg font-medium text-gray-700 mb-6">Meta diaria</h2>
+      {/* Título */}
+      <h2 className="meta-diaria-title">Meta diaria</h2>
 
-        <div className="flex flex-col sm:flex-row gap-6 items-center">
+      <div className="meta-diaria-content">
+        <div className="meta-diaria-content-row">
           {/* Lado izquierdo: Gauge */}
-          <div className="flex-1 flex flex-col items-center">
-            <div className="relative w-[300px] h-[180px]">
+          <div className="meta-diaria-gauge-container">
+            <div className="meta-diaria-gauge-wrapper">
               <svg
                 viewBox="0 0 300 170"
-                className="w-full h-full overflow-visible"
+                className="meta-diaria-svg"
               >
                 {/* Definiciones para sombras */}
                 <defs>
@@ -126,7 +126,7 @@ export default function MetaDiaria() {
                   strokeDasharray={`${grayLength} ${semicircumference * 2}`}
                   strokeDashoffset={0}
                   transform={`rotate(180 ${centerX} ${centerY})`}
-                  style={{ transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)' }}
+                  className="meta-diaria-gauge-bg"
                 />
 
                 {/* Arco azul (progreso 0-100%) */}
@@ -143,10 +143,7 @@ export default function MetaDiaria() {
                     strokeDasharray={`${blueLength} ${semicircumference * 2}`}
                     strokeDashoffset={0}
                     transform={`rotate(180 ${centerX} ${centerY})`}
-                    style={{
-                      transition: 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
-                      filter: 'drop-shadow(0 2px 4px rgba(74, 126, 187, 0.3))',
-                    }}
+                    className="meta-diaria-gauge-blue"
                   />
                 )}
 
@@ -164,10 +161,7 @@ export default function MetaDiaria() {
                     strokeDasharray={`${greenLength} ${semicircumference * 2}`}
                     strokeDashoffset={-blueLength}
                     transform={`rotate(180 ${centerX} ${centerY})`}
-                    style={{
-                      transition: 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
-                      filter: 'drop-shadow(0 2px 4px rgba(34, 197, 94, 0.3))',
-                    }}
+                    className="meta-diaria-gauge-green"
                   />
                 )}
 
@@ -176,30 +170,27 @@ export default function MetaDiaria() {
                   x={centerX}
                   y={centerY - 10}
                   textAnchor="middle"
-                  className="text-4xl font-bold fill-gray-800"
-                  style={{ fontSize: '42px', fontWeight: 700 }}
+                  className="meta-diaria-percentage-text"
                 >
                   {Math.round(porcentaje)}%
                 </text>
 
                 {/* Label 0 */}
                 <text
-                  x={centerX - radius - 5}
+                  x={centerX - radius - 20}
                   y={centerY + 8}
                   textAnchor="end"
-                  className="text-xs fill-gray-400"
-                  style={{ fontSize: '11px' }}
+                  className="meta-diaria-label-0"
                 >
                   0
                 </text>
 
                 {/* Label 100 */}
                 <text
-                  x={centerX + radius + 5}
+                  x={centerX + radius + 20}
                   y={centerY + 8}
                   textAnchor="start"
-                  className="text-xs fill-gray-400"
-                  style={{ fontSize: '11px' }}
+                  className="meta-diaria-label-100"
                 >
                   100
                 </text>
@@ -208,28 +199,28 @@ export default function MetaDiaria() {
           </div>
 
           {/* Lado derecho: Info */}
-          <div className="flex-1 space-y-4">
-            <div>
-              <p className="text-xs text-gray-500 uppercase tracking-wide font-semibold mb-1">
+          <div className="meta-diaria-info-container">
+            <div className="meta-diaria-info-item">
+              <p className="meta-diaria-info-label">
                 Cantidad de Ventas
               </p>
-              <p className="text-2xl font-bold text-gray-800">{totalTransactions}</p>
+              <p className="meta-diaria-info-value">{totalTransactions}</p>
             </div>
 
-            <div>
-              <p className="text-xs text-gray-500 uppercase tracking-wide font-semibold mb-1">
+            <div className="meta-diaria-info-item">
+              <p className="meta-diaria-info-label">
                 Ventas Hoy
               </p>
-              <p className="text-2xl font-bold text-gray-800">
+              <p className="meta-diaria-info-value">
                 {formatCurrency(totalSalesToday)}
               </p>
             </div>
 
-            <div>
-              <p className="text-xs text-gray-500 uppercase tracking-wide font-semibold mb-1">
+            <div className="meta-diaria-info-item">
+              <p className="meta-diaria-info-label">
                 Meta
               </p>
-              <p className="text-2xl font-bold text-gray-800">
+              <p className="meta-diaria-info-value">
                 {formatCurrency(goal.targetAmount)}
               </p>
             </div>

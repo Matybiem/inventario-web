@@ -1,0 +1,96 @@
+/* StockCritico.css */
+
+.stock-critico-container {
+  background-color: white;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.stock-critico-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1A1A1A;
+  margin-bottom: 1rem;
+}
+
+.stock-critico-table {
+  width: 100%;
+}
+
+.stock-critico-thead {
+  border-bottom: 1px solid #E5E5E5;
+}
+
+.stock-critico-th {
+  text-align: left;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: #666;
+  font-weight: 500;
+  padding-bottom: 0.5rem;
+}
+
+.stock-critico-th-right {
+  text-align: right;
+}
+
+.stock-critico-tbody {
+}
+
+.stock-critico-tr {
+  border-bottom: 1px solid #E5E5E5;
+  animation: fadeInSlideUp 0.5s ease-out forwards;
+  opacity: 0;
+}
+
+.stock-critico-tr:last-child {
+  border-bottom: 0;
+}
+
+.stock-critico-td {
+  padding: 0.75rem 0;
+  font-size: 0.875rem;
+  color: #1A1A1A;
+}
+
+.stock-critico-td-right {
+  text-align: right;
+  font-weight: 700;
+}
+
+.stock-critico-stock-critical {
+  color: #EF4444;
+}
+
+.stock-critico-stock-low {
+  color: #EAB308;
+}
+
+.stock-critico-stock-normal {
+  color: #22C55E;
+}
+
+.stock-critico-empty {
+  padding: 1.5rem 0;
+  text-align: center;
+  font-size: 0.8125rem;
+  color: #999;
+}
+
+.stock-critico-footer {
+  font-size: 0.6875rem;
+  color: #999;
+  margin-top: 0.75rem;
+}
+
+@keyframes fadeInSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

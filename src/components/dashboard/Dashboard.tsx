@@ -13,16 +13,19 @@ export default function Dashboard() {
         <StockCritico />
       </div>
 
-      {/* Row 2: Meta Diaria (full width) */}
-      <div className="mb-5">
+      {/* Row 3: Productos Más Vendidos + Ventas/Mes */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
         <MetaDiaria />
+        <ProductosMasVendidos />
+        
       </div>
 
-      {/* Row 3: Productos Más Vendidos + Ventas/Mes */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <ProductosMasVendidos />
+      {/* Row 2: Meta Diaria (full width) */}
+      <div className="mb-5">
         <VentasPorMes />
       </div>
+
+      
     </div>
   );
 }
