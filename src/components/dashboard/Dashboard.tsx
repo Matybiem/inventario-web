@@ -6,7 +6,7 @@ import VentasPorMes from './VentasPorMes';
 
 export default function Dashboard() {
   return (
-    <div className="p-6 max-w-[1200px]">
+    <div className="p-6 max-w-[1200px] min-w-[1000px] mx-auto">
       {/* Row 1: Stock General + Stock Crítico */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
         <StockGeneral />
@@ -25,7 +25,6 @@ export default function Dashboard() {
         <VentasPorMes />
       </div>
 
-      
     </div>
   );
 }

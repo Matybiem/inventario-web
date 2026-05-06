@@ -179,11 +179,11 @@ export default function StockGeneral() {
       <div className="stock-general-legend">
         <div className="stock-general-legend-item">
           <span className="stock-general-legend-dot stock-general-legend-dot-green"></span>
-          <span className="stock-general-legend-text">Normal [{thresholds.normalMin}%-{thresholds.normalMax}%]: {stats.normalCount} Productos</span>
+          <span className="stock-general-legend-text">Normal [{thresholds.lowMax}%-{thresholds.normalMax}%]: {stats.normalCount} Productos</span>
         </div>
         <div className="stock-general-legend-item">
           <span className="stock-general-legend-dot stock-general-legend-dot-yellow"></span>
-          <span className="stock-general-legend-text">Bajo [{thresholds.lowMin}%-{thresholds.lowMax}%]: {stats.lowCount} Productos</span>
+          <span className="stock-general-legend-text">Bajo [{thresholds.criticalMax}%-{thresholds.lowMax}%]: {stats.lowCount} Productos</span>
         </div>
         <div className="stock-general-legend-item">
           <span className="stock-general-legend-dot stock-general-legend-dot-red"></span>
