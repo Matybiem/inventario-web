@@ -7,7 +7,7 @@ import Venta from '@/components/venta/Venta';
 import Administrar from '@/components/administrar/Administrar';
 
 function AppContent() {
-  const { currentPage } = useApp();
+  const { currentPage, isSidebarCollapsed } = useApp();
 
   const renderPage = () => {
     switch (currentPage) {
@@ -27,7 +27,7 @@ function AppContent() {
   return (
     <div className="min-h-screen bg-[#F5F5F5]">
       <Sidebar />
-      <main className="ml-[240px] min-h-screen">
+      <main className={`${isSidebarCollapsed ? 'ml-[70px]' : 'ml-[240px]'} min-h-screen transition-all duration-300 ease-in-out`}>
         {renderPage()}
       </main>
       <ToastContainer />

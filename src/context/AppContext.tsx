@@ -26,6 +26,8 @@ interface AppContextType {
   showToast: (message: string, type: 'success' | 'error') => void;
   removeToast: (id: string) => void;
   syncStatus: 'connected' | 'disconnected';
+  isSidebarCollapsed: boolean;
+  setIsSidebarCollapsed: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -36,6 +38,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [sales, setSales] = useState<Sale[]>([]);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [syncStatus, setSyncStatus] = useState<'connected' | 'disconnected'>('connected');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   const refreshData = useCallback(() => {
     setProducts(store.getProducts());
@@ -120,6 +123,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         showToast,
         removeToast,
         syncStatus,
+        isSidebarCollapsed,
+        setIsSidebarCollapsed,
       }}
     >
       {children}
