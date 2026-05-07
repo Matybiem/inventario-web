@@ -80,7 +80,7 @@ export default function MetaDiaria() {
   };
 
   return (
-    <div className="meta-diaria-container">
+    <div className="meta-diaria-container min-w-[400px]">
       {/* Botón de editar meta */}
       <button
         onClick={openMetaDialog}

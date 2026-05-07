@@ -2,8 +2,7 @@
 
 .meta-diaria-container {
   width: 100%;
-  max-width: 720px;
-  margin: 0 auto;
+  margin: 0;
   position: relative;
   background-color: white;
   border-radius: 0.75rem;
