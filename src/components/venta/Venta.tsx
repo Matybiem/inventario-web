@@ -6,6 +6,7 @@ import { formatCurrency } from '@/lib/utils';
 import { FileText, Clock, X, Search } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import './Venta.css';
 
 interface SaleItem {
   id: string;
@@ -168,21 +169,21 @@ export default function Venta() {
   };
 
   return (
-    <div className="p-6 max-w-[1200px]">
+    <div className="venta-container">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-[24px] font-bold text-[#1A1A1A]">Venta/Boleta</h1>
-        <div className="flex items-center gap-3">
+      <div className="venta-header">
+        <h1 className="venta-title">Venta/Boleta</h1>
+        <div className="venta-header-buttons">
           <button
             onClick={() => setShowHistory(true)}
-            className="flex items-center gap-2 px-4 h-[36px] border border-[#D0D0D0] rounded-lg text-[14px] font-medium text-[#1A1A1A] hover:border-[#1A1A1A] transition-colors"
+            className="venta-btn"
           >
             <Clock size={16} />
             Historial
           </button>
           <button
             onClick={handleExportPDF}
-            className="flex items-center gap-2 px-4 h-[36px] bg-[#1A1A1A] text-white rounded-lg text-[14px] font-medium hover:bg-[#333] transition-colors"
+            className="venta-btn venta-btn-primary"
           >
             <FileText size={16} />
             Exportar PDF
@@ -191,27 +192,26 @@ export default function Venta() {
       </div>
 
       {/* Sale Table */}
-      <div className="bg-white rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.08)] overflow-hidden mb-4">
-        <table className="w-full">
-          <thead>
-            <tr className="bg-[#F5F5F5]">
-              <th className="text-left text-[12px] uppercase text-[#666] font-medium px-4 py-3 w-[80px]">Boleta</th>
-              <th className="text-left text-[12px] uppercase text-[#666] font-medium px-4 py-3">Producto</th>
-              <th className="text-center text-[12px] uppercase text-[#666] font-medium px-4 py-3 w-[100px]">Cantidad</th>
-              <th className="text-right text-[12px] uppercase text-[#666] font-medium px-4 py-3 w-[120px]">Precio</th>
-              <th className="text-right text-[12px] uppercase text-[#666] font-medium px-4 py-3 w-[120px]">Total</th>
+      <div className="venta-table-container">
+        <table className="venta-table">
+          <thead className="venta-thead">
+            <tr>
+              <th className="venta-th">Boleta</th>
+              <th className="venta-th venta-th--producto">Producto</th>
+              <th className="venta-th venta-th--cantidad">Cantidad</th>
+              <th className="venta-th venta-th-right">Precio</th>
+              <th className="venta-th venta-th-right">Total</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="venta-tbody">
             {items.map((item, i) => (
               <tr
                 key={item.id}
-                className="border-b border-[#E5E5E5] hover:bg-[#FAFAFA]"
-                style={{ backgroundColor: i % 2 === 1 ? '#FAFAFA' : 'white' }}
+                className="venta-tr"
               >
-                <td className="px-4 py-2.5 text-[14px] text-[#666]">{String(i + 1).padStart(3, '0')}</td>
-                <td className="px-4 py-2.5 text-[14px] text-[#1A1A1A]">{item.product.name}</td>
-                <td className="px-4 py-2.5 text-center">
+                <td className="venta-td venta-td-boleta">{String(i + 1).padStart(3, '0')}</td>
+                <td className="venta-td">{item.product.name}</td>
+                <td className="venta-td venta-td-center">
                   {editingQty === item.id ? (
                     <input
                       type="number"
@@ -226,7 +226,7 @@ export default function Venta() {
                       }}
                       onBlur={() => handleQtyEdit(item.id, Number(editQtyValue))}
                       autoFocus
-                      className="w-16 h-8 text-center border border-[#D0D0D0] rounded text-[14px] focus:border-[#1A1A1A] focus:outline-none"
+                      className="venta-qty-input"
                       min={1}
                       max={item.product.stock}
                     />
@@ -236,44 +236,42 @@ export default function Venta() {
                         setEditingQty(item.id);
                         setEditQtyValue(String(item.quantity));
                       }}
-                      className="text-[14px] text-[#1A1A1A] hover:text-[#F5A623] transition-colors font-medium"
+                      className="venta-qty-btn"
                     >
                       {item.quantity}
                     </button>
                   )}
                 </td>
-                <td className="px-4 py-2.5 text-[14px] text-[#666] text-right">{formatCurrency(item.unitPrice)}</td>
-                <td className="px-4 py-2.5 text-[14px] text-[#1A1A1A] text-right font-medium">{formatCurrency(item.subtotal)}</td>
+                <td className="venta-td venta-td-right venta-td-gray">{formatCurrency(item.unitPrice)}</td>
+                <td className="venta-td venta-td-right venta-td-bold">{formatCurrency(item.subtotal)}</td>
               </tr>
             ))}
             {/* Input Row */}
-            <tr className="border-b border-[#E5E5E5] border-dashed">
-              <td className="px-4 py-2.5">
-                <span className="text-[12px] text-[#999]">{String(items.length + 1).padStart(3, '0')}</span>
+            <tr className="venta-tr-input">
+              <td className="venta-td venta-td-boleta">
+                <span>{String(items.length + 1).padStart(3, '0')}</span>
               </td>
-              <td colSpan={4} className="px-4 py-2">
-                <div className="flex items-center gap-2">
-                  <Search size={16} className="text-[#D0D0D0]" />
-                  <input
-                    ref={inputRef}
-                    type="text"
-                    value={inputId}
-                    onChange={e => setInputId(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    placeholder="Ingresar id_producto y presionar Enter..."
-                    className="w-full h-[36px] text-[14px] text-[#1A1A1A] placeholder:text-[#999] bg-transparent border-2 border-dashed border-[#D0D0D0] rounded-lg px-3 focus:border-[#1A1A1A] focus:outline-none transition-colors animate-pulse-border"
-                  />
-                </div>
+              <td colSpan={4} className="venta-input-row">
+                <Search size={16} className="venta-input-icon" />
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={inputId}
+                  onChange={e => setInputId(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Ingresar id_producto y presionar Enter..."
+                  className="venta-input animate-pulse-border"
+                />
               </td>
             </tr>
             {/* Total Row */}
             {items.length > 0 && (
-              <tr className="bg-[#F5F5F5] border-t-2 border-[#1A1A1A]">
-                <td className="px-4 py-3 text-[14px] font-bold text-[#1A1A1A]">TOTAL</td>
-                <td className="px-4 py-3"></td>
-                <td className="px-4 py-3 text-center text-[14px] font-bold text-[#1A1A1A]">{totalQuantity}</td>
-                <td className="px-4 py-3"></td>
-                <td className="px-4 py-3 text-right text-[14px] font-bold text-[#1A1A1A]">{formatCurrency(totalAmount)}</td>
+              <tr className="venta-tr-total">
+                <td className="venta-td venta-td-bold">TOTAL</td>
+                <td className="venta-td"></td>
+                <td className="venta-td venta-td-center venta-td-bold">{totalQuantity}</td>
+                <td className="venta-td"></td>
+                <td className="venta-td venta-td-right venta-td-bold">{formatCurrency(totalAmount)}</td>
               </tr>
             )}
           </tbody>
@@ -284,7 +282,7 @@ export default function Venta() {
       {items.length > 0 && (
         <button
           onClick={handleSaveSale}
-          className="w-full h-[44px] bg-[#1A1A1A] text-white text-[14px] font-bold rounded-lg hover:bg-[#333] transition-colors"
+          className="venta-save-btn"
         >
           Guardar Venta
         </button>
@@ -301,36 +299,36 @@ function HistoryModal({ onClose }: { onClose: () => void }) {
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/30 z-40" onClick={onClose} />
-      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] max-h-[500px] bg-white rounded-xl shadow-lg z-50 animate-in fade-in zoom-in-95 duration-200 overflow-hidden flex flex-col">
-        <div className="flex items-center justify-between p-5 border-b border-[#E5E5E5]">
-          <h3 className="text-[18px] font-semibold text-[#1A1A1A]">Historial de Boletas</h3>
-          <button onClick={onClose} className="p-1.5 hover:bg-[#F5F5F5] rounded-lg transition-colors">
-            <X size={18} className="text-[#666]" />
+      <div className="venta-modal-overlay" onClick={onClose} />
+      <div className="venta-modal">
+        <div className="venta-modal-header">
+          <h3 className="venta-modal-title">Historial de Boletas</h3>
+          <button onClick={onClose} className="venta-modal-close">
+            <X size={18} className="venta-modal-close-icon" />
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto p-5">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-[#E5E5E5]">
-                <th className="text-left text-[12px] uppercase text-[#666] font-medium pb-2">Fecha</th>
-                <th className="text-right text-[12px] uppercase text-[#666] font-medium pb-2">Items</th>
-                <th className="text-right text-[12px] uppercase text-[#666] font-medium pb-2">Total</th>
+        <div className="venta-modal-content">
+          <table className="venta-history-table">
+            <thead className="venta-history-thead">
+              <tr>
+                <th className="venta-history-th">Fecha</th>
+                <th className="venta-history-th venta-history-th-right">Items</th>
+                <th className="venta-history-th venta-history-th-right">Total</th>
               </tr>
             </thead>
             <tbody>
               {sales.map(sale => (
-                <tr key={sale.id} className="border-b border-[#E5E5E5] last:border-0">
-                  <td className="py-2.5 text-[14px] text-[#1A1A1A]">
+                <tr key={sale.id} className="venta-history-tr">
+                  <td className="venta-history-td">
                     {new Date(sale.saleDate).toLocaleDateString('es-CL')}
                   </td>
-                  <td className="py-2.5 text-[14px] text-[#666] text-right">{sale.totalItems}</td>
-                  <td className="py-2.5 text-[14px] text-[#1A1A1A] text-right font-medium">{formatCurrency(sale.totalAmount)}</td>
+                  <td className="venta-history-td venta-history-td-right venta-history-td-gray">{sale.totalItems}</td>
+                  <td className="venta-history-td venta-history-td-right">{formatCurrency(sale.totalAmount)}</td>
                 </tr>
               ))}
               {sales.length === 0 && (
                 <tr>
-                  <td colSpan={3} className="py-6 text-center text-[13px] text-[#999]">
+                  <td colSpan={3} className="venta-history-empty">
                     No hay ventas registradas
                   </td>
                 </tr>
