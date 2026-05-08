@@ -12,6 +12,15 @@
   margin-bottom: 1.5rem;
 }
 
+.venta-boleta-number {
+  font-size: 0.9375rem;
+  color: #666;
+  margin-bottom: 1rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #E5E5E5;
+  font-weight: 500;
+}
+
 .venta-title {
   font-size: 1.5rem;
   font-weight: bold;
@@ -52,11 +61,21 @@
 }
 
 .venta-table-container {
+  position: relative;
   background-color: white;
   border-radius: 0.75rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-  overflow: hidden;
+  overflow: visible;
   margin-bottom: 1rem;
+}
+
+.venta-suggestions-dropdown-outside {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 0.25rem 0;
 }
 
 .venta-table {
@@ -359,4 +378,70 @@
   text-align: center;
   font-size: 0.8125rem;
   color: #999;
+}
+
+/* Autocomplete Dropdown */
+.venta-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.venta-suggestions-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 0.25rem;
+  background-color: white;
+  border: 1px solid #D0D0D0;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 100;
+}
+
+.venta-suggestion-item {
+  display: flex;
+  flex-direction: column;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  color: #1A1A1A;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  border-bottom: 1px solid #F0F0F0;
+}
+
+.venta-suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.venta-suggestion-item:hover {
+  background-color: #F9F9F9;
+}
+
+.venta-suggestion-selected {
+  background-color: #1A1A1A;
+  color: white;
+}
+
+.venta-suggestion-id {
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.venta-suggestion-name {
+  font-size: 0.8125rem;
+  opacity: 0.8;
+  margin-bottom: 0.25rem;
+}
+
+.venta-suggestion-stock {
+  font-size: 0.75rem;
+  opacity: 0.6;
+}
+
+.venta-suggestion-selected .venta-suggestion-name,
+.venta-suggestion-selected .venta-suggestion-stock {
+  opacity: 0.9;
 }

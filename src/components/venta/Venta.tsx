@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
-import { getProductByProductId, getSales, updateProductStock } from '@/data/store';
+import { getProductById, getProductByProductId, getSales, updateProductStock, getProducts } from '@/data/store';
 import type { Product } from '@/types';
 import { formatCurrency } from '@/lib/utils';
 import { FileText, Clock, X, Search } from 'lucide-react';
@@ -20,41 +20,49 @@ export default function Venta() {
   const { showToast, createSale } = useApp();
   const [items, setItems] = useState<SaleItem[]>([]);
   const [inputId, setInputId] = useState('');
+  const [suggestions, setSuggestions] = useState<Product[]>([]);
+  const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [pendingProduct, setPendingProduct] = useState<Product | null>(null);
   const [pendingQty, setPendingQty] = useState('1');
   const [editingQty, setEditingQty] = useState<string | null>(null);
   const [editQtyValue, setEditQtyValue] = useState('1');
   const [showHistory, setShowHistory] = useState(false);
+  const [currentBoleta, setCurrentBoleta] = useState(() => {
+    const saved = localStorage.getItem('inv_current_boleta');
+    return saved ? parseInt(saved, 10) : 10001;
+  });
   const inputRef = useRef<HTMLInputElement>(null);
   const qtyInputRef = useRef<HTMLInputElement>(null);
+  const tableContainerRef = useRef<HTMLDivElement>(null);
 
-  const handleAddProduct = () => {
-    const id = inputId.trim();
-    if (!id) return;
+  const filterProducts = (query: string): Product[] => {
+    if (!query.trim()) return [];
+    const allProducts = getProducts();
+    const lowerQuery = query.toLowerCase();
+    return allProducts
+      .filter(p =>
+        p.productId.toLowerCase().includes(lowerQuery) ||
+        p.name.toLowerCase().includes(lowerQuery) ||
+        p.id.toLowerCase().includes(lowerQuery)
+      )
+      .slice(0, 8);
+  };
 
-    const product = getProductByProductId(id);
-    if (!product) {
-      showToast('Producto no encontrado', 'error');
-      setInputId('');
-      return;
-    }
-
+  const selectProduct = (product: Product) => {
     if (!product.status) {
       showToast('Producto está inactivo', 'error');
-      setInputId('');
       return;
     }
 
     if (product.stock <= 0) {
       showToast('Producto sin stock disponible', 'error');
-      setInputId('');
       return;
     }
 
     const existing = items.find(item => item.product.id === product.id);
     if (existing) {
       showToast('Producto ya está en la boleta', 'error');
-      setInputId('');
       return;
     }
 
@@ -62,6 +70,77 @@ export default function Venta() {
     setPendingQty('1');
     setEditingQty('pending');
     setInputId('');
+    setSuggestions([]);
+    setShowSuggestions(false);
+    setSelectedSuggestionIndex(-1);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setInputId(value);
+    setSelectedSuggestionIndex(-1);
+    if (value.trim()) {
+      const filtered = filterProducts(value);
+      setSuggestions(filtered);
+      setShowSuggestions(filtered.length > 0);
+    } else {
+      setSuggestions([]);
+      setShowSuggestions(false);
+    }
+  };
+
+  const handleAddProduct = () => {
+    const id = inputId.trim();
+    if (!id) return;
+
+    const product = getProductByProductId(id) ?? getProductById(id);
+    if (!product) {
+      showToast('Producto no encontrado', 'error');
+      setInputId('');
+      return;
+    }
+
+    selectProduct(product);
+  };
+
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!showSuggestions) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (pendingProduct) return;
+        handleAddProduct();
+      }
+      return;
+    }
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setSelectedSuggestionIndex(prev =>
+          prev < suggestions.length - 1 ? prev + 1 : prev
+        );
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setSelectedSuggestionIndex(prev => (prev > 0 ? prev - 1 : -1));
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (selectedSuggestionIndex >= 0) {
+          selectProduct(suggestions[selectedSuggestionIndex]);
+        } else if (inputId.trim()) {
+          handleAddProduct();
+        }
+        break;
+      case 'Escape':
+        e.preventDefault();
+        setSuggestions([]);
+        setShowSuggestions(false);
+        setSelectedSuggestionIndex(-1);
+        break;
+      default:
+        break;
+    }
   };
 
   const handleSubmitPendingQty = (qtyValue: string) => {
@@ -92,14 +171,6 @@ export default function Venta() {
     setEditingQty(null);
     setInputId('');
     inputRef.current?.focus();
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      if (pendingProduct) return;
-      handleAddProduct();
-    }
   };
 
   useEffect(() => {
@@ -158,7 +229,7 @@ export default function Venta() {
 
     doc.setFontSize(10);
     doc.text(`Fecha: ${new Date().toLocaleDateString('es-CL')}`, 14, 35);
-    doc.text(`N° Boleta: ${Date.now().toString().slice(-6)}`, 14, 42);
+    doc.text(`N° Boleta: ${String(currentBoleta).padStart(6, '0')}`, 14, 42);
 
     autoTable(doc, {
       startY: 50,
@@ -174,7 +245,7 @@ export default function Venta() {
       footStyles: { fillColor: [245, 245, 245], textColor: [26, 26, 26], fontStyle: 'bold' },
     });
 
-    doc.save(`boleta_${Date.now()}.pdf`);
+    doc.save(`boleta_${String(currentBoleta).padStart(6, '0')}.pdf`);
     showToast('PDF exportado exitosamente', 'success');
   };
 
@@ -207,6 +278,9 @@ export default function Venta() {
     });
 
     setItems([]);
+    const nextBoleta = currentBoleta + 1;
+    setCurrentBoleta(nextBoleta);
+    localStorage.setItem('inv_current_boleta', nextBoleta.toString());
     showToast('Venta guardada exitosamente', 'success');
   };
 
@@ -233,12 +307,17 @@ export default function Venta() {
         </div>
       </div>
 
+      {/* Boleta Number */}
+      <div className="venta-boleta-number">
+        <span>Boleta N°: {String(currentBoleta).padStart(6, '0')}</span>
+      </div>
+
       {/* Sale Table */}
-      <div className="venta-table-container">
+      <div className="venta-table-container" ref={tableContainerRef}>
         <table className="venta-table">
           <thead className="venta-thead">
             <tr>
-              <th className="venta-th">Boleta</th>
+              <th className="venta-th">Item</th>
               <th className="venta-th venta-th--producto">Producto</th>
               <th className="venta-th venta-th--cantidad">Cantidad</th>
               <th className="venta-th venta-th-right">Precio</th>
@@ -324,15 +403,17 @@ export default function Venta() {
                 </td>
                 <td colSpan={4} className="venta-input-row">
                   <Search size={16} className="venta-input-icon" />
-                  <input
-                    ref={inputRef}
-                    type="text"
-                    value={inputId}
-                    onChange={e => setInputId(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    placeholder="Ingresar id_producto y presionar Enter..."
-                    className="venta-input animate-pulse-border"
-                  />
+                  <div className="venta-input-wrapper">
+                    <input
+                      ref={inputRef}
+                      type="text"
+                      value={inputId}
+                      onChange={handleInputChange}
+                      onKeyDown={handleInputKeyDown}
+                      placeholder="Ingresar id_producto y presionar Enter..."
+                      className="venta-input animate-pulse-border"
+                    />
+                  </div>
                 </td>
               </tr>
             )}
@@ -348,6 +429,23 @@ export default function Venta() {
             )}
           </tbody>
         </table>
+        {showSuggestions && suggestions.length > 0 && (
+          <div className="venta-suggestions-dropdown venta-suggestions-dropdown-outside">
+            {suggestions.map((product, index) => (
+              <div
+                key={product.id}
+                onClick={() => selectProduct(product)}
+                className={`venta-suggestion-item ${
+                  index === selectedSuggestionIndex ? 'venta-suggestion-selected' : ''
+                }`}
+              >
+                <div className="venta-suggestion-id">{product.productId}</div>
+                <div className="venta-suggestion-name">{product.name}</div>
+                <div className="venta-suggestion-stock">Stock: {product.stock}</div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Save Sale Button */}
@@ -356,7 +454,7 @@ export default function Venta() {
           onClick={handleSaveSale}
           className="venta-save-btn"
         >
-          Guardar Venta
+          Generar Boleta
         </button>
       )}
 
