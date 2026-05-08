@@ -199,7 +199,18 @@
   transition: border-color 0.15s ease;
 }
 
-.venta-qty-input:focus {
+.venta-qty-input-editing {
+  border: 2px dashed #D0D0D0;
+  background-color: transparent;
+}
+
+.venta-qty-input.animate-pulse-border,
+.venta-qty-input-editing.animate-pulse-border {
+  animation: pulse-border 2s infinite;
+}
+
+.venta-qty-input:focus,
+.venta-qty-input-editing:focus {
   border-color: #1A1A1A;
   outline: none;
 }

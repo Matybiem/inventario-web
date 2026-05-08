@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
 import { getProductByProductId, getSales, updateProductStock } from '@/data/store';
 import type { Product } from '@/types';
@@ -20,10 +20,13 @@ export default function Venta() {
   const { showToast, createSale } = useApp();
   const [items, setItems] = useState<SaleItem[]>([]);
   const [inputId, setInputId] = useState('');
+  const [pendingProduct, setPendingProduct] = useState<Product | null>(null);
+  const [pendingQty, setPendingQty] = useState('1');
   const [editingQty, setEditingQty] = useState<string | null>(null);
-  const [editQtyValue, setEditQtyValue] = useState('');
+  const [editQtyValue, setEditQtyValue] = useState('1');
   const [showHistory, setShowHistory] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const qtyInputRef = useRef<HTMLInputElement>(null);
 
   const handleAddProduct = () => {
     const id = inputId.trim();
@@ -48,7 +51,6 @@ export default function Venta() {
       return;
     }
 
-    // Check if already in list
     const existing = items.find(item => item.product.id === product.id);
     if (existing) {
       showToast('Producto ya está en la boleta', 'error');
@@ -56,15 +58,38 @@ export default function Venta() {
       return;
     }
 
+    setPendingProduct(product);
+    setPendingQty('1');
+    setEditingQty('pending');
+    setInputId('');
+  };
+
+  const handleSubmitPendingQty = (qtyValue: string) => {
+    if (!pendingProduct) return;
+
+    const parsedQty = Number(qtyValue);
+    if (Number.isNaN(parsedQty) || parsedQty <= 0) {
+      showToast('Ingrese una cantidad válida', 'error');
+      return;
+    }
+
+    if (parsedQty > pendingProduct.stock) {
+      showToast(`Stock máximo disponible: ${pendingProduct.stock}`, 'error');
+      return;
+    }
+
     const newItem: SaleItem = {
       id: `item_${Date.now()}`,
-      product,
-      quantity: 1,
-      unitPrice: product.price,
-      subtotal: product.price,
+      product: pendingProduct,
+      quantity: parsedQty,
+      unitPrice: pendingProduct.price,
+      subtotal: parsedQty * pendingProduct.price,
     };
 
     setItems(prev => [...prev, newItem]);
+    setPendingProduct(null);
+    setPendingQty('1');
+    setEditingQty(null);
     setInputId('');
     inputRef.current?.focus();
   };
@@ -72,33 +97,50 @@ export default function Venta() {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       e.preventDefault();
+      if (pendingProduct) return;
       handleAddProduct();
     }
   };
 
-  const handleQtyEdit = (itemId: string, newQty: number) => {
-    const item = items.find(i => i.id === itemId);
-    if (!item) return;
+  useEffect(() => {
+    if (editingQty) {
+      qtyInputRef.current?.focus();
+      qtyInputRef.current?.select();
+    }
+  }, [editingQty]);
 
-    if (newQty <= 0) {
-      setItems(prev => prev.filter(i => i.id !== itemId));
+  const handleQtyEdit = (itemId: string, newQty: string) => {
+    if (itemId === 'pending') {
+      handleSubmitPendingQty(newQty);
       return;
     }
 
-    if (newQty > item.product.stock) {
+    const item = items.find(i => i.id === itemId);
+    if (!item) return;
+
+    const parsedQty = Number(newQty);
+    if (Number.isNaN(parsedQty) || parsedQty <= 0) {
+      showToast('Ingrese una cantidad válida', 'error');
+      return;
+    }
+
+    if (parsedQty > item.product.stock) {
       showToast(`Stock máximo disponible: ${item.product.stock}`, 'error');
       setEditingQty(null);
+      inputRef.current?.focus();
       return;
     }
 
     setItems(prev =>
       prev.map(i =>
         i.id === itemId
-          ? { ...i, quantity: newQty, subtotal: newQty * i.unitPrice }
+          ? { ...i, quantity: parsedQty, subtotal: parsedQty * i.unitPrice }
           : i
       )
     );
     setEditingQty(null);
+    setEditQtyValue('1');
+    inputRef.current?.focus();
   };
 
   const totalQuantity = items.reduce((sum, i) => sum + i.quantity, 0);
@@ -214,19 +256,20 @@ export default function Venta() {
                 <td className="venta-td venta-td-center">
                   {editingQty === item.id ? (
                     <input
+                      ref={qtyInputRef}
                       type="number"
                       value={editQtyValue}
                       onChange={e => setEditQtyValue(e.target.value)}
                       onKeyDown={e => {
                         if (e.key === 'Enter') {
-                          handleQtyEdit(item.id, Number(editQtyValue));
+                          e.preventDefault();
+                          handleQtyEdit(item.id, editQtyValue);
                         } else if (e.key === 'Escape') {
                           setEditingQty(null);
                         }
                       }}
-                      onBlur={() => handleQtyEdit(item.id, Number(editQtyValue))}
-                      autoFocus
-                      className="venta-qty-input"
+                      onBlur={() => handleQtyEdit(item.id, editQtyValue)}
+                      className={editingQty === item.id ? 'venta-qty-input venta-qty-input-editing animate-pulse-border' : 'venta-qty-input'}
                       min={1}
                       max={item.product.stock}
                     />
@@ -246,24 +289,53 @@ export default function Venta() {
                 <td className="venta-td venta-td-right venta-td-bold">{formatCurrency(item.subtotal)}</td>
               </tr>
             ))}
-            {/* Input Row */}
-            <tr className="venta-tr-input">
-              <td className="venta-td venta-td-boleta">
-                <span>{String(items.length + 1).padStart(3, '0')}</span>
-              </td>
-              <td colSpan={4} className="venta-input-row">
-                <Search size={16} className="venta-input-icon" />
-                <input
-                  ref={inputRef}
-                  type="text"
-                  value={inputId}
-                  onChange={e => setInputId(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Ingresar id_producto y presionar Enter..."
-                  className="venta-input animate-pulse-border"
-                />
-              </td>
-            </tr>
+            {pendingProduct ? (
+              <tr className="venta-tr">
+                <td className="venta-td venta-td-boleta">{String(items.length + 1).padStart(3, '0')}</td>
+                <td className="venta-td">{pendingProduct.name}</td>
+                <td className="venta-td venta-td-center">
+                  <input
+                    ref={qtyInputRef}
+                    type="number"
+                    value={pendingQty}
+                    onChange={e => setPendingQty(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleQtyEdit('pending', pendingQty);
+                      } else if (e.key === 'Escape') {
+                        setPendingProduct(null);
+                        setEditingQty(null);
+                        inputRef.current?.focus();
+                      }
+                    }}
+                    className="venta-qty-input venta-qty-input-editing animate-pulse-border"
+                    min={1}
+                    max={pendingProduct.stock}
+                  />
+                </td>
+                <td className="venta-td venta-td-right venta-td-gray">{formatCurrency(pendingProduct.price)}</td>
+                <td className="venta-td venta-td-right venta-td-bold">{formatCurrency(pendingProduct.price)}</td>
+              </tr>
+            ) : (
+              <tr className="venta-tr-input">
+                <td className="venta-td venta-td-boleta">
+                  <span>{String(items.length + 1).padStart(3, '0')}</span>
+                </td>
+                <td colSpan={4} className="venta-input-row">
+                  <Search size={16} className="venta-input-icon" />
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={inputId}
+                    onChange={e => setInputId(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Ingresar id_producto y presionar Enter..."
+                    className="venta-input animate-pulse-border"
+                  />
+                </td>
+              </tr>
+            )}
             {/* Total Row */}
             {items.length > 0 && (
               <tr className="venta-tr-total">
