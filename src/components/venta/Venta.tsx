@@ -3,7 +3,7 @@ import { useApp } from '@/context/AppContext';
 import { getProductById, getProductByProductId, getSales, updateProductStock, getProducts } from '@/data/store';
 import type { Product } from '@/types';
 import { formatCurrency } from '@/lib/utils';
-import { FileText, Clock, X, Search } from 'lucide-react';
+import { Clock, X, Search, Download, Eye } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import './Venta.css';
@@ -28,6 +28,9 @@ export default function Venta() {
   const [editingQty, setEditingQty] = useState<string | null>(null);
   const [editQtyValue, setEditQtyValue] = useState('1');
   const [showHistory, setShowHistory] = useState(false);
+  const [showPDFPreview, setShowPDFPreview] = useState(false);
+  const [previewItems, setPreviewItems] = useState<SaleItem[]>([]);
+  const [previewBoleta, setPreviewBoleta] = useState(0);
   const [currentBoleta, setCurrentBoleta] = useState(() => {
     const saved = localStorage.getItem('inv_current_boleta');
     return saved ? parseInt(saved, 10) : 10001;
@@ -170,7 +173,10 @@ export default function Venta() {
     setPendingQty('1');
     setEditingQty(null);
     setInputId('');
-    inputRef.current?.focus();
+    setTimeout(() => {
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    }, 0);
   };
 
   useEffect(() => {
@@ -179,6 +185,16 @@ export default function Venta() {
       qtyInputRef.current?.select();
     }
   }, [editingQty]);
+
+  useEffect(() => {
+    // Cuando se confirma un producto (pendingProduct pasa a null), enfoca el input de búsqueda
+    if (!pendingProduct && items.length > 0 && !editingQty) {
+      setTimeout(() => {
+        inputRef.current?.focus();
+        inputRef.current?.select();
+      }, 50);
+    }
+  }, [pendingProduct, editingQty, items.length]);
 
   const handleQtyEdit = (itemId: string, newQty: string) => {
     if (itemId === 'pending') {
@@ -198,7 +214,10 @@ export default function Venta() {
     if (parsedQty > item.product.stock) {
       showToast(`Stock máximo disponible: ${item.product.stock}`, 'error');
       setEditingQty(null);
-      inputRef.current?.focus();
+      setTimeout(() => {
+        inputRef.current?.focus();
+        inputRef.current?.select();
+      }, 0);
       return;
     }
 
@@ -211,43 +230,14 @@ export default function Venta() {
     );
     setEditingQty(null);
     setEditQtyValue('1');
-    inputRef.current?.focus();
+    setTimeout(() => {
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    }, 0);
   };
 
   const totalQuantity = items.reduce((sum, i) => sum + i.quantity, 0);
   const totalAmount = items.reduce((sum, i) => sum + i.subtotal, 0);
-
-  const handleExportPDF = () => {
-    if (items.length === 0) {
-      showToast('No hay productos para exportar', 'error');
-      return;
-    }
-
-    const doc = new jsPDF();
-    doc.setFontSize(18);
-    doc.text('Boleta de Venta', 105, 20, { align: 'center' });
-
-    doc.setFontSize(10);
-    doc.text(`Fecha: ${new Date().toLocaleDateString('es-CL')}`, 14, 35);
-    doc.text(`N° Boleta: ${String(currentBoleta).padStart(6, '0')}`, 14, 42);
-
-    autoTable(doc, {
-      startY: 50,
-      head: [['Producto', 'Cantidad', 'Precio Unit.', 'Subtotal']],
-      body: items.map(item => [
-        item.product.name,
-        item.quantity.toString(),
-        formatCurrency(item.unitPrice),
-        formatCurrency(item.subtotal),
-      ]),
-      foot: [['TOTAL', totalQuantity.toString(), '', formatCurrency(totalAmount)]],
-      headStyles: { fillColor: [26, 26, 26], textColor: [255, 255, 255] },
-      footStyles: { fillColor: [245, 245, 245], textColor: [26, 26, 26], fontStyle: 'bold' },
-    });
-
-    doc.save(`boleta_${String(currentBoleta).padStart(6, '0')}.pdf`);
-    showToast('PDF exportado exitosamente', 'success');
-  };
 
   const handleSaveSale = () => {
     if (items.length === 0) {
@@ -255,18 +245,33 @@ export default function Venta() {
       return;
     }
 
+    // Show preview modal
+    setPreviewItems(items);
+    setPreviewBoleta(currentBoleta);
+    setShowPDFPreview(true);
+  };
+
+  const handleConfirmSave = () => {
+    if (previewItems.length === 0) {
+      showToast('No hay productos para guardar', 'error');
+      return;
+    }
+
     // Deduct stock
-    items.forEach(item => {
+    previewItems.forEach(item => {
       const newStock = item.product.stock - item.quantity;
       updateProductStock(item.product.id, newStock);
     });
 
+    const totalQty = previewItems.reduce((sum, i) => sum + i.quantity, 0);
+    const totalAmt = previewItems.reduce((sum, i) => sum + i.subtotal, 0);
+
     // Create sale record
     createSale({
       saleDate: new Date().toISOString().split('T')[0],
-      totalAmount,
-      totalItems: totalQuantity,
-      items: items.map(item => ({
+      totalAmount: totalAmt,
+      totalItems: totalQty,
+      items: previewItems.map(item => ({
         id: item.id,
         saleId: '',
         productId: item.product.id,
@@ -278,6 +283,7 @@ export default function Venta() {
     });
 
     setItems([]);
+    setShowPDFPreview(false);
     const nextBoleta = currentBoleta + 1;
     setCurrentBoleta(nextBoleta);
     localStorage.setItem('inv_current_boleta', nextBoleta.toString());
@@ -296,13 +302,6 @@ export default function Venta() {
           >
             <Clock size={16} />
             Historial
-          </button>
-          <button
-            onClick={handleExportPDF}
-            className="venta-btn venta-btn-primary"
-          >
-            <FileText size={16} />
-            Exportar PDF
           </button>
         </div>
       </div>
@@ -460,12 +459,23 @@ export default function Venta() {
 
       {/* History Modal */}
       {showHistory && <HistoryModal onClose={() => setShowHistory(false)} />}
+
+      {/* PDF Preview Modal */}
+      {showPDFPreview && (
+        <PDFPreviewModal 
+          items={previewItems}
+          boletaNumber={previewBoleta}
+          onClose={() => setShowPDFPreview(false)}
+          onConfirmSave={handleConfirmSave}
+        />
+      )}
     </div>
   );
 }
 
 function HistoryModal({ onClose }: { onClose: () => void }) {
   const sales = getSales().slice(0, 20);
+  const [selectedSalePreview, setSelectedSalePreview] = useState<any>(null);
 
   return (
     <>
@@ -484,6 +494,7 @@ function HistoryModal({ onClose }: { onClose: () => void }) {
                 <th className="venta-history-th">Fecha</th>
                 <th className="venta-history-th venta-history-th-right">Items</th>
                 <th className="venta-history-th venta-history-th-right">Total</th>
+                <th className="venta-history-th venta-history-th-right">Ver</th>
               </tr>
             </thead>
             <tbody>
@@ -494,17 +505,284 @@ function HistoryModal({ onClose }: { onClose: () => void }) {
                   </td>
                   <td className="venta-history-td venta-history-td-right venta-history-td-gray">{sale.totalItems}</td>
                   <td className="venta-history-td venta-history-td-right">{formatCurrency(sale.totalAmount)}</td>
+                  <td className="venta-history-td venta-history-td-right">
+                    <button
+                      onClick={() => setSelectedSalePreview(sale)}
+                      className="venta-history-view-btn"
+                      title="Ver vista previa"
+                    >
+                      <Eye size={18} />
+                    </button>
+                  </td>
                 </tr>
               ))}
               {sales.length === 0 && (
                 <tr>
-                  <td colSpan={3} className="venta-history-empty">
+                  <td colSpan={4} className="venta-history-empty">
                     No hay ventas registradas
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
+        </div>
+      </div>
+
+      {/* Sale Preview Modal */}
+      {selectedSalePreview && (
+        <SalePreviewModal 
+          sale={selectedSalePreview}
+          onClose={() => setSelectedSalePreview(null)}
+        />
+      )}
+    </>
+  );
+}
+
+interface PDFPreviewModalProps {
+  items: SaleItem[];
+  boletaNumber: number;
+  onClose: () => void;
+  onConfirmSave: () => void;
+}
+
+interface Sale {
+  id: string;
+  saleDate: string;
+  totalAmount: number;
+  totalItems: number;
+  items: Array<{
+    id: string;
+    saleId: string;
+    productId: string;
+    quantity: number;
+    unitPrice: number;
+    subtotal: number;
+    productName: string;
+  }>;
+}
+
+function PDFPreviewModal({ items, boletaNumber, onClose, onConfirmSave }: PDFPreviewModalProps) {
+  const [pdfUrl, setPdfUrl] = useState<string>('');
+  const { showToast } = useApp();
+
+  useEffect(() => {
+    const totalQty = items.reduce((sum, i) => sum + i.quantity, 0);
+    const totalAmt = items.reduce((sum, i) => sum + i.subtotal, 0);
+
+    const doc = new jsPDF();
+    doc.setFontSize(18);
+    doc.text('Boleta de Venta', 105, 20, { align: 'center' });
+
+    doc.setFontSize(10);
+    doc.text(`Fecha: ${new Date().toLocaleDateString('es-CL')}`, 14, 35);
+    doc.text(`N° Boleta: ${String(boletaNumber).padStart(6, '0')}`, 14, 42);
+
+    autoTable(doc, {
+      startY: 50,
+      head: [['Producto', 'Cantidad', 'Precio Unit.', 'Subtotal']],
+      body: items.map(item => [
+        item.product.name,
+        item.quantity.toString(),
+        formatCurrency(item.unitPrice),
+        formatCurrency(item.subtotal),
+      ]),
+      foot: [['TOTAL', totalQty.toString(), '', formatCurrency(totalAmt)]],
+      headStyles: { fillColor: [26, 26, 26], textColor: [255, 255, 255] },
+      footStyles: { fillColor: [245, 245, 245], textColor: [26, 26, 26], fontStyle: 'bold' },
+    });
+
+    const url = doc.output('dataurlstring');
+    setPdfUrl(url as string);
+  }, [items, boletaNumber]);
+
+  const handleSavePDF = () => {
+    try {
+      const totalQty = items.reduce((sum, i) => sum + i.quantity, 0);
+      const totalAmt = items.reduce((sum, i) => sum + i.subtotal, 0);
+
+      const doc = new jsPDF();
+      doc.setFontSize(18);
+      doc.text('Boleta de Venta', 105, 20, { align: 'center' });
+
+      doc.setFontSize(10);
+      doc.text(`Fecha: ${new Date().toLocaleDateString('es-CL')}`, 14, 35);
+      doc.text(`N° Boleta: ${String(boletaNumber).padStart(6, '0')}`, 14, 42);
+
+      autoTable(doc, {
+        startY: 50,
+        head: [['Producto', 'Cantidad', 'Precio Unit.', 'Subtotal']],
+        body: items.map(item => [
+          item.product.name,
+          item.quantity.toString(),
+          formatCurrency(item.unitPrice),
+          formatCurrency(item.subtotal),
+        ]),
+        foot: [['TOTAL', totalQty.toString(), '', formatCurrency(totalAmt)]],
+        headStyles: { fillColor: [26, 26, 26], textColor: [255, 255, 255] },
+        footStyles: { fillColor: [245, 245, 245], textColor: [26, 26, 26], fontStyle: 'bold' },
+      });
+
+      const fileName = `boleta_${String(boletaNumber).padStart(6, '0')}.pdf`;
+      doc.save(fileName);
+      
+      showToast('PDF guardado exitosamente', 'success');
+      onConfirmSave();
+    } catch (err) {
+      console.error('Error:', err);
+      showToast('Error al procesar el PDF', 'error');
+    }
+  };
+
+  return (
+    <>
+      <div className="venta-modal-overlay" onClick={onClose} />
+      <div className="venta-modal" style={{ width: '90%', maxWidth: '800px', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+        <div className="venta-modal-header">
+          <h3 className="venta-modal-title">Vista Previa - Boleta N° {String(boletaNumber).padStart(6, '0')}</h3>
+          <button onClick={onClose} className="venta-modal-close">
+            <X size={18} className="venta-modal-close-icon" />
+          </button>
+        </div>
+        <div className="venta-modal-content" style={{ flex: 1, overflow: 'auto' }}>
+          {pdfUrl && (
+            <iframe 
+              src={pdfUrl} 
+              style={{ 
+                width: '100%', 
+                height: '100%', 
+                border: 'none',
+                minHeight: '500px'
+              }} 
+              title="PDF Preview"
+            />
+          )}
+        </div>
+        <div style={{ display: 'flex', gap: '10px', padding: '16px', borderTop: '1px solid #e5e5e5', justifyContent: 'flex-end' }}>
+          <button
+            onClick={onClose}
+            className="venta-btn"
+            style={{ padding: '8px 16px' }}
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={handleSavePDF}
+            className="venta-btn venta-btn-primary"
+            style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '8px' }}
+          >
+            <Download size={16} />
+            Guardar PDF
+          </button>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function SalePreviewModal({ sale, onClose }: { sale: Sale; onClose: () => void }) {
+  const [pdfUrl, setPdfUrl] = useState<string>('');
+  const { showToast } = useApp();
+
+  useEffect(() => {
+    const doc = new jsPDF();
+    doc.setFontSize(18);
+    doc.text('Boleta de Venta', 105, 20, { align: 'center' });
+
+    doc.setFontSize(10);
+    doc.text(`Fecha: ${new Date(sale.saleDate).toLocaleDateString('es-CL')}`, 14, 35);
+
+    autoTable(doc, {
+      startY: 50,
+      head: [['Producto', 'Cantidad', 'Precio Unit.', 'Subtotal']],
+      body: sale.items.map(item => [
+        item.productName,
+        item.quantity.toString(),
+        formatCurrency(item.unitPrice),
+        formatCurrency(item.subtotal),
+      ]),
+      foot: [['TOTAL', sale.totalItems.toString(), '', formatCurrency(sale.totalAmount)]],
+      headStyles: { fillColor: [26, 26, 26], textColor: [255, 255, 255] },
+      footStyles: { fillColor: [245, 245, 245], textColor: [26, 26, 26], fontStyle: 'bold' },
+    });
+
+    const url = doc.output('dataurlstring');
+    setPdfUrl(url as string);
+  }, [sale]);
+
+  const handleDownloadPDF = () => {
+    try {
+      const doc = new jsPDF();
+      doc.setFontSize(18);
+      doc.text('Boleta de Venta', 105, 20, { align: 'center' });
+
+      doc.setFontSize(10);
+      doc.text(`Fecha: ${new Date(sale.saleDate).toLocaleDateString('es-CL')}`, 14, 35);
+
+      autoTable(doc, {
+        startY: 50,
+        head: [['Producto', 'Cantidad', 'Precio Unit.', 'Subtotal']],
+        body: sale.items.map(item => [
+          item.productName,
+          item.quantity.toString(),
+          formatCurrency(item.unitPrice),
+          formatCurrency(item.subtotal),
+        ]),
+        foot: [['TOTAL', sale.totalItems.toString(), '', formatCurrency(sale.totalAmount)]],
+        headStyles: { fillColor: [26, 26, 26], textColor: [255, 255, 255] },
+        footStyles: { fillColor: [245, 245, 245], textColor: [26, 26, 26], fontStyle: 'bold' },
+      });
+
+      const fileName = `boleta_${sale.id}.pdf`;
+      doc.save(fileName);
+      
+      showToast('PDF descargado exitosamente', 'success');
+    } catch (err) {
+      console.error('Error:', err);
+      showToast('Error al descargar el PDF', 'error');
+    }
+  };
+
+  return (
+    <>
+      <div className="venta-modal-overlay" onClick={onClose} />
+      <div className="venta-modal" style={{ width: '90%', maxWidth: '800px', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+        <div className="venta-modal-header">
+          <h3 className="venta-modal-title">Vista Previa - Boleta {sale.id}</h3>
+          <button onClick={onClose} className="venta-modal-close">
+            <X size={18} className="venta-modal-close-icon" />
+          </button>
+        </div>
+        <div className="venta-modal-content" style={{ flex: 1, overflow: 'auto' }}>
+          {pdfUrl && (
+            <iframe 
+              src={pdfUrl} 
+              style={{ 
+                width: '100%', 
+                height: '100%', 
+                border: 'none',
+                minHeight: '500px'
+              }} 
+              title="PDF Preview"
+            />
+          )}
+        </div>
+        <div style={{ display: 'flex', gap: '10px', padding: '16px', borderTop: '1px solid #e5e5e5', justifyContent: 'flex-end' }}>
+          <button
+            onClick={onClose}
+            className="venta-btn"
+            style={{ padding: '8px 16px' }}
+          >
+            Cerrar
+          </button>
+          <button
+            onClick={handleDownloadPDF}
+            className="venta-btn venta-btn-primary"
+            style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '8px' }}
+          >
+            <Download size={16} />
+            Descargar PDF
+          </button>
         </div>
       </div>
     </>
