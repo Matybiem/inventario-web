@@ -34,18 +34,26 @@ export default function MetaDiaria() {
   const centerX = 150;
   const centerY = 150;
   const semicircumference = Math.PI * radius;
-  const maxVisualPercent = 150;
 
   // Arco azul (0% a min(100%, porcentaje))
   const bluePercent = Math.min(porcentaje, 100);
   const blueLength = (bluePercent / 100) * semicircumference;
 
-  // Arco verde (exceso sobre 100%)
-  const greenPercent =
-    porcentaje > 100 ? Math.min(porcentaje - 100, maxVisualPercent - 100) : 0;
-  const greenLength = (greenPercent / 100) * semicircumference;
+  // Capas de superposición cada 100% extra sobre el 100%
+  const overlayColors = ['#22C55E', '#60A5FA', '#FACC15', '#F97316', '#EF4444'];
+  const overlayData = porcentaje > 100
+    ? overlayColors
+        .map((color, index) => {
+          const excessStart = 100 + index * 100;
+          const excessAmount = Math.max(0, Math.min(porcentaje - excessStart, 100));
+          return {
+            color,
+            length: (excessAmount / 100) * semicircumference,
+          };
+        })
+        .filter((layer) => layer.length > 0)
+    : [];
 
-  // Arco gris de fondo
   const grayLength = semicircumference;
 
   const openMetaDialog = useCallback(() => {
@@ -147,23 +155,23 @@ export default function MetaDiaria() {
                   />
                 )}
 
-                {/* Arco verde (exceso >100%) */}
-                {greenLength > 0 && (
+                {/* Capas de superposición por cada 100% extra */}
+                {overlayData.map((layer, index) => (
                   <circle
-                    key={`green-${animKey}`}
+                    key={`overlay-${index}-${animKey}`}
                     cx={centerX}
                     cy={centerY}
                     r={radius}
                     fill="none"
-                    stroke="#22C55E"
+                    stroke={layer.color}
                     strokeWidth={28}
                     strokeLinecap="round"
-                    strokeDasharray={`${greenLength} ${semicircumference * 2}`}
-                    strokeDashoffset={-blueLength}
+                    strokeDasharray={`${layer.length} ${semicircumference * 2}`}
+                    strokeDashoffset={0}
                     transform={`rotate(180 ${centerX} ${centerY})`}
-                    className="meta-diaria-gauge-green"
+                    className="meta-diaria-gauge-overlay"
                   />
-                )}
+                ))}
 
                 {/* Texto del porcentaje */}
                 <text
